@@ -2,13 +2,14 @@
   "name": "trello-json-collect",
   "version": "1.0.0",
   "description": "Collect and Clean-up data on Trello's JSON export file.",
-  "main": "serve.js",
+  "main": "extract_trello_data.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.19.2",
     "csv-writer": "^1.6.0",
     "dotenv": "^8.2.0"
   }
