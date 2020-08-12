@@ -1,14 +1,8 @@
-require('dotenv').config();
 const fs = require('fs');
-const trelloJsonfile = process.env.TRELLO_JSON_FILE;
 
-var chapterData = [];
-fs.readFile(trelloJsonfile, 'utf8', (err, jsonString) => {
-    if (err) {
-        console.log("File read failed:", err)
-        return
-    }
-    let data = JSON.parse(jsonString);
+async function getTrelloData(jsonFile) {
+    let chapterData = [];
+    let data = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
     let activeCards = data.cards.filter((card) => { return card.closed === false; });
     let customfields = data.customFields;
     let eidField = customfields.filter((field) => { return field.name === 'EID' })[0];
@@ -17,7 +11,7 @@ fs.readFile(trelloJsonfile, 'utf8', (err, jsonString) => {
     let baseField = customfields.filter((field) => { return field.name === 'Base' })[0];
     let genderField = customfields.filter((field) => { return field.name === 'Gender' })[0];
 
-    activeCards.forEach((card) => {
+    await activeCards.forEach((card) => {
         let cardData;
         let eid;
         let cc;
@@ -57,9 +51,9 @@ fs.readFile(trelloJsonfile, 'utf8', (err, jsonString) => {
             careerCounselor: cc ? cc.value.text : ''
         });
     });
+    return chapterData;
+};
 
-    fs.writeFile("data/chapter_data.json", JSON.stringify(chapterData), (err) => {
-        if (err) console.log(err);
-        console.log("Successfully Written to File.");
-    });
-});
+module.exports = {
+    getTrelloData
+};
