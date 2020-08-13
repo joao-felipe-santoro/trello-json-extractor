@@ -21,25 +21,33 @@ async function updateTrello(apiKey, apiToken, jointJson) {
         var chargeability = card.chargeability;
         console.log(card);
         console.log('CardId: ', cardId);
-        if (chargeability) {
-            console.log('chargeability: ', chargeability);
-            axios.put(`https://api.trello.com/1/cards/${cardId}/customField/${chargeabilityFieldId}/item?key=${apiKey}&token=${apiToken}`, {
-                value: {
-                    text: chargeability
-                }
-            });
-            sleep(1000);
-        }
-        if (bookedUntilDate) {
-            console.log('bookedUntilDate: ', bookedUntilDate);
-            axios.put(`https://api.trello.com/1/cards/${cardId}/customField/${bookedUntilFieldId}/item?key=${apiKey}&token=${apiToken}`, {
-                value: {
-                    date: (new Date(bookedUntilDate)).toJSON()
-                }
-            });
-            sleep(1000);
-        }
+        updateChargeability(chargeability);
+        updateBookedUntil(bookedUntilDate);
     });
+};
+
+function updateChargeability(chargeability) {
+    if (chargeability) {
+        console.log('chargeability: ', chargeability);
+        axios.put(`https://api.trello.com/1/cards/${cardId}/customField/${chargeabilityFieldId}/item?key=${apiKey}&token=${apiToken}`, {
+            value: {
+                text: chargeability
+            }
+        });
+        sleep(1000);
+    }
+};
+
+function updateBookedUntil(bookedUntil) {
+    if (bookedUntilDate) {
+        console.log('bookedUntilDate: ', bookedUntilDate);
+        axios.put(`https://api.trello.com/1/cards/${cardId}/customField/${bookedUntilFieldId}/item?key=${apiKey}&token=${apiToken}`, {
+            value: {
+                date: (new Date(bookedUntilDate)).toJSON()
+            }
+        });
+        sleep(1000);
+    };
 };
 
 module.exports = {
