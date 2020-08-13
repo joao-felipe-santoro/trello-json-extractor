@@ -5,6 +5,7 @@ async function getTrelloData(jsonFile) {
     let data = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
     let activeCards = data.cards.filter((card) => { return card.closed === false; });
     let customfields = data.customFields;
+    let lists = data.lists;
     let eidField = customfields.filter((field) => { return field.name === 'EID' })[0];
     let ccField = customfields.filter((field) => { return field.name === 'Career Counselor' })[0];
     let clField = customfields.filter((field) => { return field.name === 'CL' })[0];
@@ -12,7 +13,6 @@ async function getTrelloData(jsonFile) {
     let genderField = customfields.filter((field) => { return field.name === 'Gender' })[0];
 
     await activeCards.forEach((card) => {
-        let cardData;
         let eid;
         let cc;
         let cl;
@@ -21,6 +21,8 @@ async function getTrelloData(jsonFile) {
         let baseValue;
         let gender;
         let genderValue;
+        let checklistId;
+        let project = lists.filter((list) => { return list.id == card.idList})[0].name;
 
         if (card.customFieldItems.length > 0) {
             eid = card.customFieldItems.filter((item) => { return item.idCustomField === eidField.id; })[0];
@@ -44,6 +46,7 @@ async function getTrelloData(jsonFile) {
         chapterData.push({
             cardId: '' || card.id,
             cardName: '' || card.name,
+            project: project,
             base: baseValue ? baseValue.value.text : '',
             gender: genderValue ? genderValue.value.text : '',
             careerLevel: clValue ? clValue.value.text : '',
