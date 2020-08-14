@@ -1,9 +1,11 @@
 const axios = require('axios').default;
 
-const chargeabilityFieldId = '5f32e1e08b8b4d2c71ed851e';
-const bookedUntilFieldId = '5f3188ef0650ff1abf8b24fa';
-const malFieldId = '5f32e1c9228ed06b678b63be';
-const hireDateFieldId = '5f31f4908ea52e2ffefa8242';
+const chargeabilityFieldId = process.env.CF_CHG_ID;
+const bookedUntilFieldId = process.env.CF_BU_ID;
+const malFieldId = process.env.CF_MAL_ID;
+//const hireDateFieldId = ;
+const lastPromoFieldId = process.env.CF_LP_ID;
+const birthdayFieldId = process.env.CF_BD_ID;
 
 const sleep = (milliseconds) => {
     const date = Date.now();
@@ -13,41 +15,119 @@ const sleep = (milliseconds) => {
     } while (currentDate - date < milliseconds);
 };
 
-async function updateTrello(apiKey, apiToken, jointJson) {
-    var chapterData = jointJson;
-    chapterData.forEach((card) => {
-        var cardId = card.cardId;
-        var bookedUntilDate = card.bookedUntil;
-        var chargeability = card.chargeability;
-        console.log(card);
-        console.log('CardId: ', cardId);
-        updateChargeability(chargeability);
-        updateBookedUntil(bookedUntilDate);
+async function updateTrello(apiKey, apiToken, trelloData, rosterData) {
+    rosterData.forEach((card) => {
+        var trelloCardFound = trelloData.filter((trelloCard) => { return trelloCard.cardId == card.cardId })[0];
+        if (trelloCardFound.chargeability !== card.chargeability) {
+            console.log('CHG Change! ', card.cardId);
+            sleep(1500);
+            updateChargeability(apiKey, apiToken, rosterCard.cardId, card.chargeability);
+        }
+        if (trelloCardFound.bookedUntil !== card.bookedUntil) {
+            console.log('BU Change!', card.cardId);
+            sleep(1500);
+            updateBookedUntil(apiKey, apiToken, card.cardId, card.bookedUntil);
+        }
+        if (trelloCardFound.hireDate !== card.hireDate) {
+            console.log('HD Change!', card.cardId);
+            sleep(1500);
+            updateHireDate(apiKey, apiToken, card.cardId, card.hireDate);
+        }
+        if (trelloCardFound.monthAtLevel !== card.monthAtLevel) {
+            console.log('MAL Change!', card.cardId);
+            sleep(1500);
+            updateMal(apiKey, apiToken, card.cardId, card.monthAtLevel);
+        }
+        if (trelloCardFound.lastPromo !== card.lastPromo) {
+            console.log('LP Change!', card.cardId);
+            sleep(1500);
+            updateLastPromo(apiKey, apiToken, card.cardId, card.lastPromo);
+        }
+        if (trelloCardFound.birthday !== card.birthday) {
+            console.log('BD Change!', card.cardId);
+            sleep(1500);
+            updateBirthday(apiKey, apiToken, card.cardId, card.birthday);
+        }
     });
 };
 
-function updateChargeability(chargeability) {
-    if (chargeability) {
+function updateChargeability(apiKey, apiToken, cardId, chargeability) {
+    if (chargeability && chargeability !== '') {
+        sleep(1500);
         console.log('chargeability: ', chargeability);
         axios.put(`https://api.trello.com/1/cards/${cardId}/customField/${chargeabilityFieldId}/item?key=${apiKey}&token=${apiToken}`, {
             value: {
                 text: chargeability
             }
+        }).catch(function (error) {
+            console.log('Error', error);
         });
-        sleep(1000);
     }
 };
 
-function updateBookedUntil(bookedUntil) {
-    if (bookedUntilDate) {
-        console.log('bookedUntilDate: ', bookedUntilDate);
+function updateBookedUntil(apiKey, apiToken, cardId, bookedUntilDate) {
+    if (bookedUntilDate && bookedUntilDate !== '') {
+        sleep(1500);
         axios.put(`https://api.trello.com/1/cards/${cardId}/customField/${bookedUntilFieldId}/item?key=${apiKey}&token=${apiToken}`, {
             value: {
-                date: (new Date(bookedUntilDate)).toJSON()
+                date: bookedUntilDate
             }
+        }).catch(function (error) {
+            console.log('Error', error);
         });
-        sleep(1000);
     };
+};
+
+function updateHireDate(apiKey, apiToken, cardId, hireDate) {
+    if (hireDate && hireDate !== '') {
+        sleep(1500);
+        axios.put(`https://api.trello.com/1/cards/${cardId}/customField/${process.env.CF_HD_ID}/item?key=${apiKey}&token=${apiToken}`, {
+            value: {
+                date: hireDate
+            }
+        }).catch(function (error) {
+            console.log('Error', error);
+        });
+    };
+};
+
+function updateLastPromo(apiKey, apiToken, cardId, lastPromoDate) {
+    if (lastPromoDate && lastPromoDate !== '') {
+        sleep(1500);
+        axios.put(`https://api.trello.com/1/cards/${cardId}/customField/${lastPromoFieldId}/item?key=${apiKey}&token=${apiToken}`, {
+            value: {
+                date: lastPromoDate
+            }
+        }).catch(function (error) {
+            console.log('Error', error);
+        });
+    };
+};
+
+function updateBirthday(apiKey, apiToken, cardId, birthdayDate) {
+    if (birthdayDate && birthdayDate !== '') {
+        sleep(1500);
+        axios.put(`https://api.trello.com/1/cards/${cardId}/customField/${birthdayFieldId}/item?key=${apiKey}&token=${apiToken}`, {
+            value: {
+                date: birthdayDate
+            }
+        }).catch(function (error) {
+            console.log('Error', error);
+        });
+    };
+};
+
+function updateMal(apiKey, apiToken, cardId, mal) {
+    if (mal && mal !== '') {
+        sleep(1500);
+        axios.put(`https://api.trello.com/1/cards/${cardId}/customField/${malFieldId}/item?key=${apiKey}&token=${apiToken}`, {
+            value: {
+                text: mal
+            }
+        }).catch(function (error) {
+            console.log('Error', error);
+        });
+    }
 };
 
 module.exports = {

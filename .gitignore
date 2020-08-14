@@ -116,3 +116,5 @@ dist
 data/
 
 chapter_data.csv
+
+.DS_Store

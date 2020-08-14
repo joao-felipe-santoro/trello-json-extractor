@@ -1,61 +1,66 @@
-const fs = require('fs');
+const axios = require('axios').default;
 
-async function getTrelloData(jsonFile) {
+async function getData(apiKey, apiToken, boardId) {
+    let response = await axios.get(`https://api.trello.com/1/boards/${boardId}/?lists=open&customFields=true&cards=visible&card_customFieldItems=true&key=${apiKey}&token=${apiToken}`);
+    return response.data;
+};
+
+async function getTrelloData(apiKey, apiToken, boardId) {
+    let data = await getData(apiKey, apiToken, boardId);
     let chapterData = [];
-    let data = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
-    let activeCards = data.cards.filter((card) => { return card.closed === false; });
-    let customfields = data.customFields;
-    let lists = data.lists;
-    let eidField = customfields.filter((field) => { return field.name === 'EID' })[0];
-    let ccField = customfields.filter((field) => { return field.name === 'Career Counselor' })[0];
-    let clField = customfields.filter((field) => { return field.name === 'CL' })[0];
-    let baseField = customfields.filter((field) => { return field.name === 'Base' })[0];
-    let genderField = customfields.filter((field) => { return field.name === 'Gender' })[0];
+    
+    let clField             = data.customFields.filter((field) => { return field.id === process.env.CF_CL_ID })[0];
+    let baseField           = data.customFields.filter((field) => { return field.id === process.env.CF_BASE_ID })[0];
+    let genderField         = data.customFields.filter((field) => { return field.id === process.env.CF_GEN_ID })[0];
 
-    await activeCards.forEach((card) => {
-        let eid;
-        let cc;
-        let cl;
-        let clValue;
-        let base;
-        let baseValue;
-        let gender;
-        let genderValue;
-        let checklistId;
-        let project = lists.filter((list) => { return list.id == card.idList})[0].name;
+    await data.cards.forEach((card) => {
+        let cardData = {};
+        let lists = data.lists;
+
+        cardData.cardId     = card.id;
+        cardData.name       = card.name;
+        cardData.project    = getCardListName(lists, card.idList);
 
         if (card.customFieldItems.length > 0) {
-            eid = card.customFieldItems.filter((item) => { return item.idCustomField === eidField.id; })[0];
-            cc = card.customFieldItems.filter((item) => { return item.idCustomField === ccField.id; })[0];
-
-            cl = card.customFieldItems.filter((item) => { return item.idCustomField === clField.id; });
-            if (cl.length == 1) {
-                clValue = clField.options.filter((option) => { return option.id === cl[0].idValue })[0];
-            }
-
-            base = card.customFieldItems.filter((item) => { return item.idCustomField === baseField.id; });
-            if (base.length == 1) {
-                baseValue = baseField.options.filter((option) => { return option.id === base[0].idValue })[0];
-            }
-
-            gender = card.customFieldItems.filter((item) => { return item.idCustomField === genderField.id; });
-            if (gender.length == 1) {
-                genderValue = genderField.options.filter((option) => { return option.id === gender[0].idValue })[0];
-            }
+            cardData.eid                = getCustomFieldValue(card, process.env.CF_EID_ID, 'text');
+            cardData.careerCounselor    = getCustomFieldValue(card, process.env.CF_CC_ID, 'text');
+            cardData.careerLevel        = getCustomFieldDropdownValue(card, clField);
+            cardData.base               = getCustomFieldDropdownValue(card, baseField);
+            cardData.gender             = getCustomFieldDropdownValue(card, genderField);
+            cardData.monthAtLevel       = getCustomFieldValue(card, process.env.CF_MAL_ID, 'text');
+            cardData.hireDate           = getCustomFieldValue(card, process.env.CF_HD_ID, 'date');
+            cardData.bookedUntil        = getCustomFieldValue(card, process.env.CF_BU_ID, 'date');
+            cardData.chargeability      = getCustomFieldValue(card, process.env.CF_CHG_ID, 'text');
+            cardData.birthday           = getCustomFieldValue(card, process.env.CF_BD_ID, 'date');
+            cardData.lastPromo          = getCustomFieldValue(card, process.env.CF_LP_ID, 'date');
         }
-        chapterData.push({
-            cardId: '' || card.id,
-            cardName: '' || card.name,
-            project: project,
-            base: baseValue ? baseValue.value.text : '',
-            gender: genderValue ? genderValue.value.text : '',
-            careerLevel: clValue ? clValue.value.text : '',
-            eid: eid ? eid.value.text : '',
-            careerCounselor: cc ? cc.value.text : ''
-        });
+        chapterData.push(cardData);
     });
     return chapterData;
 };
+
+function getCardListName(lists, idList) {
+    return lists.filter((list) => { return list.id == idList })[0].name;
+}
+
+function getCustomFieldValue(card, fieldId, type) {
+    let filteredField = card.customFieldItems.filter((item) => { return item.idCustomField === fieldId; });
+    if (filteredField.length == 1) {
+        if (type === 'text')
+            return filteredField[0].value.text;
+        if (type === 'date')
+            return filteredField[0].value.date;
+    }
+    return '';
+}
+
+function getCustomFieldDropdownValue(card, field) {
+    let filteredField = card.customFieldItems.filter((item) => { return item.idCustomField === field.id; });
+    if (filteredField.length == 1) {
+        return field.options.filter((option) => { return option.id === filteredField[0].idValue })[0].value.text;
+    }
+    return '';
+}
 
 module.exports = {
     getTrelloData
