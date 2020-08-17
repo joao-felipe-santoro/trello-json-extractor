@@ -34,14 +34,14 @@ commander
         await writeData(process.env.TRELLO_OUT_FILE, trelloData);
     }
     if (commander.joinSch) {
-        
+
         await writeData(process.env.SCHEDULING_OUT_FILE, schedulingData);
     }
     if (commander.joinRoster) {
-        
+
         await writeData(process.env.ROSTER_OUT_FILE, rosterData);
     }
-    if(commander.csv) {
+    if (commander.csv) {
         await writeCsv(rosterData);
     }
     if (commander.sync) {
@@ -58,7 +58,14 @@ async function writeData(file, data) {
 };
 
 async function writeCsv(data) {
-    converter.json2csv(data, (err, csv) => {
+    csvData = data.map((entry) => {
+        entry.bookedUntil = entry.bookedUntil.replace(/(T\d\d:\d\d:\d\d\.\d\d\dZ)/, '');
+        entry.hireDate = entry.hireDate.replace(/(T\d\d:\d\d:\d\d\.\d\d\dZ)/, '');
+        entry.lastPromo = entry.lastPromo.replace(/(T\d\d:\d\d:\d\d\.\d\d\dZ)/, '');
+        entry.birthday = entry.birthday.replace(/(T\d\d:\d\d:\d\d\.\d\d\dZ)/, '');
+        return entry;
+    });
+    converter.json2csv(csvData, (err, csv) => {
         if (err) {
             throw err;
         }

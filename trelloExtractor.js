@@ -8,31 +8,35 @@ async function getData(apiKey, apiToken, boardId) {
 async function getTrelloData(apiKey, apiToken, boardId) {
     let data = await getData(apiKey, apiToken, boardId);
     let chapterData = [];
-    
-    let clField             = data.customFields.filter((field) => { return field.id === process.env.CF_CL_ID })[0];
-    let baseField           = data.customFields.filter((field) => { return field.id === process.env.CF_BASE_ID })[0];
-    let genderField         = data.customFields.filter((field) => { return field.id === process.env.CF_GEN_ID })[0];
+
+    let clField = data.customFields.filter((field) => { return field.id === process.env.CF_CL_ID })[0];
+    let baseField = data.customFields.filter((field) => { return field.id === process.env.CF_BASE_ID })[0];
+    let genderField = data.customFields.filter((field) => { return field.id === process.env.CF_GEN_ID })[0];
 
     await data.cards.forEach((card) => {
         let cardData = {};
         let lists = data.lists;
 
-        cardData.cardId     = card.id;
-        cardData.name       = card.name;
-        cardData.project    = getCardListName(lists, card.idList);
+        cardData.cardId = card.id;
+        cardData.name = card.name;
+        cardData.project = getCardListName(lists, card.idList);
 
         if (card.customFieldItems.length > 0) {
-            cardData.eid                = getCustomFieldValue(card, process.env.CF_EID_ID, 'text');
-            cardData.careerCounselor    = getCustomFieldValue(card, process.env.CF_CC_ID, 'text');
-            cardData.careerLevel        = getCustomFieldDropdownValue(card, clField);
-            cardData.base               = getCustomFieldDropdownValue(card, baseField);
-            cardData.gender             = getCustomFieldDropdownValue(card, genderField);
-            cardData.monthAtLevel       = getCustomFieldValue(card, process.env.CF_MAL_ID, 'text');
-            cardData.hireDate           = getCustomFieldValue(card, process.env.CF_HD_ID, 'date');
-            cardData.bookedUntil        = getCustomFieldValue(card, process.env.CF_BU_ID, 'date');
-            cardData.chargeability      = getCustomFieldValue(card, process.env.CF_CHG_ID, 'text');
-            cardData.birthday           = getCustomFieldValue(card, process.env.CF_BD_ID, 'date');
-            cardData.lastPromo          = getCustomFieldValue(card, process.env.CF_LP_ID, 'date');
+            cardData.eid = getCustomFieldValue(card, process.env.CF_EID_ID, 'text');
+            cardData.careerCounselor = getCustomFieldValue(card, process.env.CF_CC_ID, 'text');
+            cardData.careerLevel = getCustomFieldDropdownValue(card, clField);
+            cardData.base = getCustomFieldDropdownValue(card, baseField);
+            cardData.gender = getCustomFieldDropdownValue(card, genderField);
+            cardData.monthAtLevel = getCustomFieldValue(card, process.env.CF_MAL_ID, 'text');
+            cardData.hireDate = getCustomFieldValue(card, process.env.CF_HD_ID, 'date');
+            cardData.bookedUntil = getCustomFieldValue(card, process.env.CF_BU_ID, 'date');
+            cardData.chargeability = getCustomFieldValue(card, process.env.CF_CHG_ID, 'text');
+            cardData.birthday = getCustomFieldValue(card, process.env.CF_BD_ID, 'date');
+            cardData.lastPromo = getCustomFieldValue(card, process.env.CF_LP_ID, 'date');
+            cardData.hardSkills = getHardSkills(card);
+            cardData.flairs = getFlairs(card);
+            cardData.training = getTraining(card);
+            cardData.certifications = getCertifications(card);
         }
         chapterData.push(cardData);
     });
@@ -60,6 +64,42 @@ function getCustomFieldDropdownValue(card, field) {
         return field.options.filter((option) => { return option.id === filteredField[0].idValue })[0].value.text;
     }
     return '';
+}
+
+function getHardSkills(card) {
+    let front = getHardSkillsFrontend(card);
+    let back = getHardSkillsBackend(card);
+
+    return front !== '' ? front + ((back !== '') ? ';' + back : '') : back;
+}
+
+function getHardSkillsFrontend(card) {
+    return getLabelsByColor(card.labels, 'sky');
+}
+
+function getHardSkillsBackend(card) {
+    return getLabelsByColor(card.labels, 'orange');
+}
+
+function getFlairs(card) {
+    return getLabelsByColor(card.labels, 'purple');
+}
+
+function getTraining(card) {
+    return getLabelsByColor(card.labels, 'pink');
+}
+
+function getCertifications(card) {
+    return getLabelsByColor(card.labels, 'black');
+}
+
+function getLabelsByColor(labels, color) {
+    let filteredLabels = labels.filter((label) => {
+        return label.color === color;
+    });
+
+    let names = filteredLabels.map((label) => label.name);
+    return names.join(';');
 }
 
 module.exports = {
