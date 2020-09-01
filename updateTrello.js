@@ -21,7 +21,7 @@ async function updateTrello(apiKey, apiToken, trelloData, rosterData) {
         if (trelloCardFound.chargeability !== card.chargeability) {
             console.log('CHG Change! ', card.cardId);
             sleep(1500);
-            updateChargeability(apiKey, apiToken, rosterCard.cardId, card.chargeability);
+            updateChargeability(apiKey, apiToken, card.cardId, card.chargeability);
         }
         if (trelloCardFound.bookedUntil !== card.bookedUntil) {
             console.log('BU Change!', card.cardId);
