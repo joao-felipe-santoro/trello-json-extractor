@@ -37,6 +37,8 @@ async function getTrelloData(apiKey, apiToken, boardId) {
             cardData.flairs = getFlairs(card);
             cardData.training = getTraining(card);
             cardData.certifications = getCertifications(card);
+            cardData.cefrLevel = getCustomFieldValue(card, process.env.CF_RS_ID, 'text');
+            cardData.cliftonStrenghts = getCustomFieldValue(card, process.env.CF_CS_ID, 'text-list');
         }
         chapterData.push(cardData);
     });
@@ -54,6 +56,8 @@ function getCustomFieldValue(card, fieldId, type) {
             return filteredField[0].value.text;
         if (type === 'date')
             return filteredField[0].value.date;
+        if (type === 'text-list')
+            return filteredField[0].value.text.replace(/,/g, ';');
     }
     return '';
 }
